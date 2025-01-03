@@ -6,23 +6,7 @@ class File_helper_Test extends CI_TestCase {
 	{
 		$this->helper('file');
 
-		vfsStreamWrapper::register();
-		vfsStreamWrapper::setRoot(new vfsStreamDirectory('testDir'));
-
-		$this->_test_dir = vfsStreamWrapper::getRoot();
-	}
-
-	// --------------------------------------------------------------------
-
-	public function test_read_file()
-	{
-		$this->assertFalse(read_file('does_not_exist'));
-
-		$content = 'Jack and Jill went up the mountain to fight a billy goat.';
-
-		$file = vfsStream::newFile('my_file.txt')->withContent($content)->at($this->_test_dir);
-
-		$this->assertEquals($content, read_file(vfsStream::url('my_file.txt')));
+		$this->_test_dir = vfsStream::setup('');
 	}
 
 	// --------------------------------------------------------------------
@@ -132,8 +116,8 @@ class File_helper_Test extends CI_TestCase {
 
 	// --------------------------------------------------------------------
 
-	 public function test_write_file()
-	 {
+	public function test_write_file()
+	{
 		$content = 'Jack and Jill went up the mountain to fight a billy goat.';
 
 		$file = vfsStream::newFile('write.txt', 0777)
@@ -142,6 +126,6 @@ class File_helper_Test extends CI_TestCase {
 			->at($this->_test_dir);
 
 		$this->assertTrue(write_file(vfsStream::url('write.txt'), $content));
-	 }
+	}
 
 }

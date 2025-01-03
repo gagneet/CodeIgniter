@@ -8,7 +8,8 @@
 	stopOnError="false"
 	stopOnFailure="false"
 	stopOnIncomplete="false"
-	stopOnSkipped="false">
+	stopOnSkipped="false"
+	beStrictAboutTestsThatDoNotTestAnything="false">
 	<testsuites>
 		<testsuite name="CodeIgniter Core Test Suite">
 			<directory suffix="test.php">./codeigniter/core</directory>
@@ -17,10 +18,8 @@
 		</testsuite>
 	</testsuites>
 	<filter>
-		<blacklist>
-			<directory suffix=".php">PEAR_INSTALL_DIR</directory>
-			<directory suffix=".php">PHP_LIBDIR</directory>
-			<directory suffix=".php">../vendor</directory>
-		</blacklist>
+		<whitelist>
+			<directory suffix=".php">../system/</directory>
+		</whitelist>
 	</filter>
 </phpunit>

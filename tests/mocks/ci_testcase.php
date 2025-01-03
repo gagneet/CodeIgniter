@@ -1,10 +1,11 @@
 <?php
 
-class CI_TestCase extends PHPUnit_Framework_TestCase {
+class CI_TestCase extends \PHPUnit\Framework\TestCase {
 
 	public $ci_vfs_root;
 	public $ci_app_root;
 	public $ci_base_root;
+	public $ci_readonly_dir;
 	protected $ci_instance;
 	protected static $ci_test_instance;
 
@@ -24,9 +25,9 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 
 	// --------------------------------------------------------------------
 
-	public function __construct()
+	public function __construct($name = null, array $data = array(), $dataName = '')
 	{
-		parent::__construct();
+		parent::__construct($name, $data, $dataName);
 		$this->ci_instance = new stdClass();
 	}
 
@@ -35,10 +36,11 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 	public function setUp()
 	{
 		// Setup VFS with base directories
-		$this->ci_vfs_root = vfsStream::setup();
+		$this->ci_vfs_root = vfsStream::setup('');
 		$this->ci_app_root = vfsStream::newDirectory('application')->at($this->ci_vfs_root);
 		$this->ci_base_root = vfsStream::newDirectory('system')->at($this->ci_vfs_root);
 		$this->ci_view_root = vfsStream::newDirectory('views')->at($this->ci_app_root);
+		$this->ci_readonly_dir = vfsStream::newDirectory('readonly', 555)->at($this->ci_app_root);
 
 		if (method_exists($this, 'set_up'))
 		{
@@ -241,7 +243,7 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 			$dir_root = $root->getChild($dir);
 			if ($dir_root)
 			{
-			   	// Yes - recurse into subdir
+				// Yes - recurse into subdir
 				$root = $dir_root;
 			}
 			else
@@ -274,14 +276,14 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 	 * @param	string	Path from base directory
 	 * @return	bool	TRUE on success, otherwise FALSE
 	 */
-	public function ci_vfs_clone($path)
+	public function ci_vfs_clone($path, $dest='')
 	{
 		// Check for array
 		if (is_array($path))
 		{
 			foreach ($path as $file)
 			{
-				$this->ci_vfs_clone($file);
+				$this->ci_vfs_clone($file, $dest);
 			}
 			return;
 		}
@@ -294,7 +296,12 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 			return FALSE;
 		}
 
-		$this->ci_vfs_create(basename($path), $content, NULL, dirname($path));
+		if (empty($dest))
+		{
+			$dest = dirname($path);
+		}
+
+		$this->ci_vfs_create(basename($path), $content, NULL, $dest);
 		return TRUE;
 	}
 
@@ -372,10 +379,22 @@ class CI_TestCase extends PHPUnit_Framework_TestCase {
 		{
 			return call_user_func_array($this->{$method},$args);
 		}
-		else
-		{
-			return parent::__call($method, $args);
-		}
+
+		return parent::__call($method, $args);
 	}
 
+	public function setExpectedException($exception_class, $exception_message = '', $exception_code = null)
+	{
+		$use_expect_exception = method_exists($this, 'expectException');
+
+		if ($use_expect_exception)
+		{
+			$this->expectException($exception_class);
+			$exception_message !== '' && $this->expectExceptionMessage($exception_message);
+		}
+		else
+		{
+			parent::setExpectedException($exception_class, $exception_message, $exception_code);
+		}
+	}
 }

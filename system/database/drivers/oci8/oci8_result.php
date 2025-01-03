@@ -2,26 +2,38 @@
 /**
  * CodeIgniter
  *
- * An open source application development framework for PHP 5.2.4 or newer
+ * An open source application development framework for PHP
  *
- * NOTICE OF LICENSE
+ * This content is released under the MIT License (MIT)
  *
- * Licensed under the Open Software License version 3.0
+ * Copyright (c) 2019 - 2022, CodeIgniter Foundation
  *
- * This source file is subject to the Open Software License (OSL 3.0) that is
- * bundled with this package in the files license.txt / license.rst.  It is
- * also available through the world wide web at this URL:
- * http://opensource.org/licenses/OSL-3.0
- * If you did not receive a copy of the license and are unable to obtain it
- * through the world wide web, please send an email to
- * licensing@ellislab.com so we can send you a copy immediately.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * @package		CodeIgniter
- * @author		EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (http://ellislab.com/)
- * @license		http://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
- * @link		http://codeigniter.com
- * @since		Version 1.0
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package	CodeIgniter
+ * @author	EllisLab Dev Team
+ * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
+ * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
+ * @copyright	Copyright (c) 2019 - 2022, CodeIgniter Foundation (https://codeigniter.com/)
+ * @license	https://opensource.org/licenses/MIT	MIT License
+ * @link	https://codeigniter.com
+ * @since	Version 1.4.1
  * @filesource
  */
 defined('BASEPATH') OR exit('No direct script access allowed');
@@ -33,24 +45,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *
  * @category	Database
  * @author		EllisLab Dev Team
- * @link		http://codeigniter.com/user_guide/database/
- * @since	1.4.1
+ * @link		https://codeigniter.com/userguide3/database/
  */
 class CI_DB_oci8_result extends CI_DB_result {
-
-	/**
-	 * Statement ID
-	 *
-	 * @var	resource
-	 */
-	public $stmt_id;
-
-	/**
-	 * Cursor ID
-	 *
-	 * @var	resource
-	 */
-	public $curs_id;
 
 	/**
 	 * Limit used flag
@@ -78,11 +75,10 @@ class CI_DB_oci8_result extends CI_DB_result {
 	{
 		parent::__construct($driver_object);
 
-		$this->stmt_id = $driver_object->stmt_id;
-		$this->curs_id = $driver_object->curs_id;
+		$this->result_id = $driver_object->result_id;
 		$this->limit_used = $driver_object->limit_used;
 		$this->commit_mode =& $driver_object->commit_mode;
-		$driver_object->stmt_id = FALSE;
+		$driver_object->result_id = FALSE;
 	}
 
 	// --------------------------------------------------------------------
@@ -94,7 +90,7 @@ class CI_DB_oci8_result extends CI_DB_result {
 	 */
 	public function num_fields()
 	{
-		$count = @oci_num_fields($this->stmt_id);
+		$count = oci_num_fields($this->result_id);
 
 		// if we used a limit we subtract it
 		return ($this->limit_used) ? $count - 1 : $count;
@@ -114,7 +110,7 @@ class CI_DB_oci8_result extends CI_DB_result {
 		$field_names = array();
 		for ($c = 1, $fieldCount = $this->num_fields(); $c <= $fieldCount; $c++)
 		{
-			$field_names[] = oci_field_name($this->stmt_id, $c);
+			$field_names[] = oci_field_name($this->result_id, $c);
 		}
 		return $field_names;
 	}
@@ -134,9 +130,9 @@ class CI_DB_oci8_result extends CI_DB_result {
 		for ($c = 1, $fieldCount = $this->num_fields(); $c <= $fieldCount; $c++)
 		{
 			$F		= new stdClass();
-			$F->name	= oci_field_name($this->stmt_id, $c);
-			$F->type	= oci_field_type($this->stmt_id, $c);
-			$F->max_length	= oci_field_size($this->stmt_id, $c);
+			$F->name	= oci_field_name($this->result_id, $c);
+			$F->type	= oci_field_type($this->result_id, $c);
+			$F->max_length	= oci_field_size($this->result_id, $c);
 
 			$retval[] = $F;
 		}
@@ -158,17 +154,6 @@ class CI_DB_oci8_result extends CI_DB_result {
 			oci_free_statement($this->result_id);
 			$this->result_id = FALSE;
 		}
-
-		if (is_resource($this->stmt_id))
-		{
-			oci_free_statement($this->stmt_id);
-		}
-
-		if (is_resource($this->curs_id))
-		{
-			oci_cancel($this->curs_id);
-			$this->curs_id = NULL;
-		}
 	}
 
 	// --------------------------------------------------------------------
@@ -182,8 +167,7 @@ class CI_DB_oci8_result extends CI_DB_result {
 	 */
 	protected function _fetch_assoc()
 	{
-		$id = ($this->curs_id) ? $this->curs_id : $this->stmt_id;
-		return @oci_fetch_assoc($id);
+		return oci_fetch_assoc($this->result_id);
 	}
 
 	// --------------------------------------------------------------------
@@ -198,9 +182,7 @@ class CI_DB_oci8_result extends CI_DB_result {
 	 */
 	protected function _fetch_object($class_name = 'stdClass')
 	{
-		$row = ($this->curs_id)
-			? oci_fetch_object($this->curs_id)
-			: oci_fetch_object($this->stmt_id);
+		$row = oci_fetch_object($this->result_id);
 
 		if ($class_name === 'stdClass' OR ! $row)
 		{
@@ -216,7 +198,18 @@ class CI_DB_oci8_result extends CI_DB_result {
 		return $class_name;
 	}
 
-}
+	// --------------------------------------------------------------------
 
-/* End of file oci8_result.php */
-/* Location: ./system/database/drivers/oci8/oci8_result.php */
+	/**
+	 * Destructor
+	 *
+	 * Attempt to free remaining statement IDs.
+	 *
+	 * @see	https://github.com/bcit-ci/CodeIgniter/pull/5896
+	 * @return	void
+	 */
+	public function __destruct()
+	{
+		$this->free_result();
+	}
+}

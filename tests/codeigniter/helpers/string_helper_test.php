@@ -22,19 +22,6 @@ class String_helper_test extends CI_TestCase {
 		$this->assertEquals($expected, strip_slashes($str));
 	}
 
-	public function test_trim_slashes()
-	{
-		$strs = array(
-			'//Slashes//\/'	=> 'Slashes//\\',
-			'/var/www/html/'	=> 'var/www/html'
-		);
-
-		foreach ($strs as $str => $expect)
-		{
-			$this->assertEquals($expect, trim_slashes($str));
-		}
-	}
-
 	// --------------------------------------------------------------------
 
 	public function test_strip_quotes()
@@ -108,28 +95,11 @@ class String_helper_test extends CI_TestCase {
 
 	// --------------------------------------------------------------------
 
-	public function test_repeater()
-	{
-		$strs = array(
-			'a'			=> 'aaaaaaaaaa',
-			'&nbsp;'	=> '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',
-			'<br>'		=> '<br><br><br><br><br><br><br><br><br><br>'
-
-		);
-
-		foreach ($strs as $str => $expect)
-		{
-			$this->assertEquals($expect, repeater($str, 10));
-		}
-	}
-
-	// --------------------------------------------------------------------
-
 	public function test_random_string()
 	{
 		$this->assertEquals(16, strlen(random_string('alnum', 16)));
-		$this->assertEquals(32, strlen(random_string('unique', 16)));
-		$this->assertInternalType('string', random_string('numeric', 16));
+		$this->assertEquals(32, strlen(random_string('md5', 16)));
+		$this->assertEquals('string', gettype(random_string('numeric', 16)));
 	}
 
 	// --------------------------------------------------------------------
